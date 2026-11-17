@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eliminar cuenta · Delete account · Keel</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="accent"></div>
+        <a class="logo" href="./">KEEL</a>
+      </header>
+
+      <h1>Eliminar tu cuenta de Keel · Delete your Keel account</h1>
+
+      <section lang="es">
+        <h2>Desde la app (inmediato)</h2>
+        <p>Abre Keel › <strong>Ajustes › Cuenta y nube › Eliminar cuenta</strong> y confirma dos veces. El borrado es inmediato.</p>
+
+        <h2>Sin la app</h2>
+        <p>
+          Si ya no tienes la app instalada, envía el email de tu cuenta con el formulario de abajo. Eliminaremos la cuenta en
+          un máximo de 30 días y te escribiremos a ese email para confirmarlo.
+        </p>
+
+        <h2>Qué se borra</h2>
+        <ul>
+          <li>Tu cuenta (email e inicio de sesión con Google).</li>
+          <li>Tu perfil público: @usuario, nombre de atleta, nivel, título y méritos.</li>
+          <li>Tus seguidores y a quién sigues.</li>
+          <li>Tu actividad en la clasificación (XP y resúmenes de entrenos y pasos).</li>
+        </ul>
+        <p>
+          Los datos guardados solo en tu teléfono se borran al desinstalar la app. Eliminar la cuenta <strong>no cancela</strong>
+          tu suscripción de Google Play: cancélala en Play Store › Pagos y suscripciones. Google conserva sus propios registros
+          de facturación según sus políticas.
+        </p>
+      </section>
+
+      <section lang="en">
+        <h2>From the app (immediate)</h2>
+        <p>Open Keel › <strong>Settings › Account &amp; cloud › Delete account</strong> and confirm twice. Deletion is immediate.</p>
+
+        <h2>Without the app</h2>
+        <p>
+          If you no longer have the app installed, submit your account email with the form below. We will delete the account
+          within 30 days and email you to confirm.
+        </p>
+
+        <h2>What gets deleted</h2>
+        <ul>
+          <li>Your account (email and Google sign-in).</li>
+          <li>Your public profile: @username, athlete name, level, title and merits.</li>
+          <li>Your followers and the people you follow.</li>
+          <li>Your leaderboard activity (XP and workout and step summaries).</li>
+        </ul>
+        <p>
+          Data stored only on your phone is deleted when you uninstall the app. Deleting your account <strong>does not
+          cancel</strong> your Google Play subscription: cancel it in Play Store › Payments &amp; subscriptions. Google keeps
+          its own billing records according to its policies.
+        </p>
+      </section>
+
+      <section>
+        <div class="card">
+          <form id="delete-form" novalidate>
+            <label for="email">EMAIL DE LA CUENTA · ACCOUNT EMAIL</label>
+            <input id="email" name="email" type="email" autocomplete="email" required maxlength="254" />
+            <label for="reason">MOTIVO (OPCIONAL) · REASON (OPTIONAL)</label>
+            <textarea id="reason" name="reason" rows="3" maxlength="500"></textarea>
+            <button type="submit">SOLICITAR ELIMINACIÓN · REQUEST DELETION</button>
+            <p id="status" class="status" role="status"></p>
+          </form>
+        </div>
+        <p class="meta">
+          ¿Problemas con el formulario? · Trouble with the form?
+          <a href="mailto:noctby@gmail.com?subject=Eliminar%20cuenta%20Keel">noctby@gmail.com</a>
+        </p>
+      </section>
+    </main>
+
+    <script>
+      // Valores públicos del proyecto de Supabase (los mismos que lleva la app). La tabla solo admite
+      // inserciones: nadie puede leer las solicitudes con esta clave.
+      const SUPABASE_URL = 'https://ynzowneupargnvjcqfed.supabase.co';
+      const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_AhMJYrGHllOUKTSWBcS70Q_fL5GusAz';
+
+      const form = document.getElementById('delete-form');
+      const status = document.getElementById('status');
+      const button = form.querySelector('button');
+      const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+      function show(message, tone) {
+        status.textContent = message;
+        status.className = `status ${tone}`;
+      }
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const email = form.email.value.trim().toLowerCase();
+        const reason = form.reason.value.trim();
+        if (!EMAIL_PATTERN.test(email)) {
+          show('Introduce un email válido · Enter a valid email.', 'error');
+          return;
+        }
+        button.disabled = true;
+        show('Enviando… · Sending…', '');
+        const headers = {
+          apikey: SUPABASE_PUBLISHABLE_KEY,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal',
+        };
+        if (SUPABASE_PUBLISHABLE_KEY.startsWith('eyJ')) headers.Authorization = `Bearer ${SUPABASE_PUBLISHABLE_KEY}`;
+        try {
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/account_deletion_requests`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ email, reason: reason || null }),
+          });
+          if (!response.ok) throw new Error(String(response.status));
+          form.reset();
+          show('Solicitud recibida. Te escribiremos en un máximo de 30 días. · Request received. We will email you within 30 days.', 'ok');
+        } catch {
+          show('No se pudo enviar. Escríbenos por email. · Could not send. Please email us.', 'error');
+        } finally {
+          button.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
